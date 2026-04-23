@@ -20,7 +20,8 @@ const Chat = () => {
   // Initialize Socket
   useEffect(() => {
     if (user) {
-      const socketHost = api.defaults.baseURL.replace('/api', '');
+  // NEW:
+      const socketHost = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
       const newSocket = io(socketHost);
       setSocket(newSocket);
       newSocket.emit('join', user._id);

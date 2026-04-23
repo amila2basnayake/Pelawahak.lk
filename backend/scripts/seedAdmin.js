@@ -9,39 +9,45 @@ const User = require('../models/User');
 
 async function seedAdmin() {
   try {
-    // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('MongoDB connected');
+    const adminEmail = process.env.ADMIN_EMAIL;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const adminName = process.env.ADMIN_NAME || 'Admin';
 
-    // Check if admin already exists
-    const adminExists = await User.findOne({ email: 'pramodyayasith@gmail.com' });
-    
+    if (!adminEmail || !adminPassword) {
+      console.error('❌ ADMIN_EMAIL and ADMIN_PASSWORD must be set in .env');
+      process.exit(1);
+    }
+
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('✅ MongoDB connected');
+
+    const adminExists = await User.findOne({ email: adminEmail });
+
     if (adminExists) {
-      console.log('Admin user already exists');
+      console.log('ℹ️  Admin user already exists');
       await mongoose.disconnect();
       return;
     }
 
-    // Create admin user
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash('Admin@567', salt);
+    const hashedPassword = await bcrypt.hash(adminPassword, salt);
 
     const admin = await User.create({
-      name: 'Admin',
-      email: 'pramodyayasith@gmail.com',
+      name: adminName,
+      email: adminEmail,
       password: hashedPassword,
       role: 'admin',
       freeAdsRemaining: 0
     });
 
-    console.log('Admin user created successfully:');
-    console.log(`Email: ${admin.email}`);
-    console.log(`Name: ${admin.name}`);
-    console.log(`Role: ${admin.role}`);
+    console.log('✅ Admin user created successfully:');
+    console.log(`   Email: ${admin.email}`);
+    console.log(`   Name:  ${admin.name}`);
+    console.log(`   Role:  ${admin.role}`);
 
     await mongoose.disconnect();
   } catch (error) {
-    console.error('Error seeding admin:', error.message);
+    console.error('❌ Error seeding admin:', error.message);
     process.exit(1);
   }
 }
